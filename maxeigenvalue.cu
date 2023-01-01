@@ -236,7 +236,7 @@ float computeMaxEigenvalue(const CSThrust& M) {
                                         thrust::raw_pointer_cast(x0.data()),
                                         max_iter, tol,
                                         d_lambda_max_computed,
-                                        thrust::raw_pointer_cast(x.data())) )  // This line throws segmentation fault for larger matrix sizes.
+                                        thrust::raw_pointer_cast(x.data())) )  // This line throws segmentation fault for larger matrix sizes. RESCUE ME?
 
   // Copy to host
   float lambda_max_computed;
