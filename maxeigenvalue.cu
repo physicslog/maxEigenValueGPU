@@ -226,6 +226,7 @@ float computeMaxEigenvalue(const CSThrust& M) {
   CHECK_CUDA(cudaMemset(d_lambda_max_computed, 0, sizeof(float)));
 
   // Get eigenvalue and eigenvector near to the upper bound of the largest eigenvalue
+
   CHECK_CUSOLVER( cusolverSpScsreigvsi(solver_handle,
                                         M.m, M.nnz,
                                         M_descr,
