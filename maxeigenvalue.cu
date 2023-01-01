@@ -1,4 +1,4 @@
-// Damodar Rajbhandari (2023)
+// Damodar Rajbhandari (2023-Jan-01)
 
 // C++ DEPENDENCIES
 #include <iostream>
@@ -69,6 +69,7 @@ struct CSThrust {
 };
 
 // Read a matrix market file and return a CSR matrix
+// See https://math.nist.gov/MatrixMarket/formats.html for more details
 void readMTXFile2CSR(const std::string& filepath, CSThrust& csr) {
   std::ifstream mtxfile(filepath.c_str(), std::ios::in);
   if (!mtxfile.is_open()) {
@@ -184,8 +185,9 @@ float computeMaxEigenvalue(const CSThrust& M) {
   //! @note CuSolverSp only supports the matrix is general type. i.e. CUSPARSE_MATRIX_TYPE_GENERAL
   //!       So, if the Matrix is stored only in the upper or lower triangular part, then we need to
   //!       extend into its missing lower or upper part, otherwise the result would be wrong.
-  //! @note Fortunately, we don't need to do this, because cusparseSpGEMM() will automatically
+  //!       Fortunately, we don't need to do this, because cusparseSpGEMM() will automatically
   //!       store its result in the general format.
+  //!       See: https://docs.nvidia.com/cuda/cusolver/index.html#cusolversp-t-csreigvsi
   CHECK_CUSPARSE( cusparseSetMatType(M_descr, CUSPARSE_MATRIX_TYPE_GENERAL) )
   CHECK_CUSPARSE( cusparseSetMatIndexBase(M_descr, CUSPARSE_INDEX_BASE_ZERO) )
 
