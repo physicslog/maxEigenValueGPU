@@ -3,7 +3,7 @@
 ##### Usage
 ````
 make
-./maxeigenvalue L11.mtx
+./maxeigenvalue mtxs/L11.mtx
 ````
 
 ##### Software Dependencies
