@@ -9,7 +9,7 @@
       "type": "cuda-gdb",
       "request": "launch",
       "program": "${workspaceFolder}/maxeigenvalue",
-      "args": "${workspaceFolder}/mtxs/dL22.mtx"
+      "args": "${workspaceFolder}/mtx/dL22.mtx"
     }
   ]
 }
