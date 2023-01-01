@@ -114,6 +114,7 @@ void readMTXFile2CSR(const std::string& filepath, CSThrust& csr) {
   mtxfile >> nrows >> ncols >> nnz;
 
   // Set and resize CSR variables
+  csr.format = "CSR";
   csr.m = nrows;
   csr.n = ncols;
 
@@ -179,23 +180,40 @@ float computeMaxEigenvalue(const CSThrust& M) {
   CHECK_CUSOLVER( cusolverSpCreate(&solver_handle) )
   cusparseMatDescr_t M_descr;
   CHECK_CUSPARSE( cusparseCreateMatDescr(&M_descr) )
+
+  //! @note CuSolverSp only supports the matrix is general type. i.e. CUSPARSE_MATRIX_TYPE_GENERAL
+  //!       So, if the Matrix is stored only in the upper or lower triangular part, then we need to
+  //!       extend into its missing lower or upper part, otherwise the result would be wrong.
+  //! @note Fortunately, we don't need to do this, because cusparseSpGEMM() will automatically
+  //!       store its result in the general format.
   CHECK_CUSPARSE( cusparseSetMatType(M_descr, CUSPARSE_MATRIX_TYPE_GENERAL) )
   CHECK_CUSPARSE( cusparseSetMatIndexBase(M_descr, CUSPARSE_INDEX_BASE_ZERO) )
+
+  // Define required intial values and threshold
   float tol = 1e-3;  // tolerance to determine the convergence
   int max_iter = 1000;  // maximum number of iterations
-  // To set the simple version of upper bound of the largest eigenvalue of the scalar laplacian matrix,
-  // we use Gershgorin circle theorem such that |\lambda_max_computed| <= |lambda_max_guess| = d_i^max + R_i
-  // where, d_i^max is largest degree of the vertex at ith vertex, and R_i is the radius of the Gershgorin circle
-  // at ith vertex := \sum_{j \ne i} |M_ij|. For simplicity, we replace R_i by (2* (nnz - m)/m). It's means
-  // the total possible nnz elements either on row or column excluding its diagonal elements.
-  // It doesnot have to be perfect because it's just a initial guess, but it needs to be as closer as to an exact max eigenvalue.
+  //! @note To set the simple version of upper bound of the largest eigenvalue of the (graph-)Laplacian.
+  //!       We use Gershgorin circle theorem such that
+  //!       |\lambda_max_computed| <= |lambda_max_guess| = d_i^max + R_i where,
+  //!       d_i^max is largest degree of the vertex at ith vertex, and
+  //!       R_i is the radius of the Gershgorin circle at ith vertex := \sum_{j \ne i} |M_ij|
+  //!       For simplicity, we replace R_i by 2*(nnz - m)/m. lambda_max_guess doesn't needs to be perfect because it's
+  //!       just a initial guess, but it should be as close as possible to the actual max. eigenvalue.
+  //!       Let me show you how I got this formula:
+  //!       1. Probability of nnz elements on the (i, j) excluding diagonal (i.e. i != j) is (nnz - m)/(m^2 - m) = (nnz - m)/(m(m - 1)).
+  //!       2. Total possible nnz elements on the ith row excluding diagonal ii is (m - 1) * (nnz - m)/(m(m -1)) = (nnz - m)/m.
+  //!       3. Total possible  nnz elements on the ith column excluding diagonal ii is (m - 1) * (nnz - m)/(m(m -1)) = (nnz - m)/m.
+  //!       4. Total possible nnz elements either on the row or column excluding its diagonal element is 2*(nnz - m)/m.
   float lambda_max_guess = *thrust::max_element(M.values.begin(), M.values.end()) + ((M.nnz - M.m)/M.m)*2;
+
+  std::cout << "Initial guess for the largest eigenvalue: " << lambda_max_guess << std::endl;
 
   thrust::device_vector<float> x0(M.m);  // Get the random initial vector
   thrust::transform(thrust::make_counting_iterator(0),
                     thrust::make_counting_iterator(M.m),
                     x0.begin(),
                     genRandomNumber());
+
   thrust::device_vector<float> x(M.m, 0);  // the eigenvector
 
   // Setting the variable for the largest eigenvalue to store
@@ -239,9 +257,9 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  CSThrust M;
-  readMTXFile2CSR(mtx_filepath, M);
-  float lambda_max = computeMaxEigenvalue(M);
+  CSThrust M;  // Create a sparse matrix instance
+  readMTXFile2CSR(mtx_filepath, M);  // Read the matrix market file and convert it to csr
+  float lambda_max = computeMaxEigenvalue(M);  // Compute the largest eigenvalue
   std::cout << "Max eigenvalue: " << lambda_max << std::endl;
 
   return EXIT_SUCCESS;
