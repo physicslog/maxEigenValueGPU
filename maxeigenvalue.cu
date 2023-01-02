@@ -192,7 +192,7 @@ float computeMaxEigenvalue(const CSThrust& M) {
   CHECK_CUSPARSE( cusparseSetMatIndexBase(M_descr, CUSPARSE_INDEX_BASE_ZERO) )
 
   // Define required intial values and threshold
-  float tol = 1e-1;  // tolerance to determine the convergence
+  float tol = 1e-3;  // tolerance to determine the convergence
   int max_iter = 1000;  // maximum number of iterations
   //! @note To set the simple version of upper bound of the largest eigenvalue of the (graph-)Laplacian.
   //!       We use Gershgorin circle theorem such that
