@@ -30,7 +30,7 @@
  *       tuned to improve the performance of the algorithm. The default value is 20.
  */
 float calcMaxEigenvalue(const Eigen::SparseMatrix<float> &L, unsigned int ncv) {
-	// 1. Construct matrix operation object using the wrapper class SparseGenMatProd
+	// 1. Construct matrix operation instance using the wrapper class SparseSymMatProd
 	Spectra::SparseSymMatProd<float> l(L);
 
 	// 2. Construct eigen solver object, requesting the maximum eigen value
@@ -46,6 +46,7 @@ float calcMaxEigenvalue(const Eigen::SparseMatrix<float> &L, unsigned int ncv) {
 		max_eigen_value = eigs.eigenvalues().real()(0);
 	}
 
+	// Just cross-checking
 	if (max_eigen_value == 0) {
 		std::cout << FRD("[ERROR]: ") << "Max Eigenvalue shouldn't be zero unless it's zero matrix." << std::endl;
 		return EXIT_FAILURE;
