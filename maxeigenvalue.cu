@@ -1,4 +1,6 @@
 // Damodar Rajbhandari (2023-Jan-01)
+// Code compilation: make
+// Usage: ./maxeigenvalue <path-to-matrix-market-file>
 
 // C++ DEPENDENCIES
 #include <iostream>
@@ -256,7 +258,7 @@ int main(int argc, char** argv) {
   if (argc > 1) {
     mtx_filepath = argv[1];
   } else {
-    std::cout << "Please provide a path to a matrix market file path" << std::endl;
+    std::cout << "Please provide a path to a matrix market file." << std::endl;
     return EXIT_FAILURE;
   }
 

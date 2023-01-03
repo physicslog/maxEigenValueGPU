@@ -15,3 +15,17 @@ make
 
 ##### Hardware Requirements
 - Code ran on NVIDIA GeForce RTX 2080 Ti and CUDA Version 11.7. Check yours using `nvidia-smi -q` command.
+
+----
+
+##### CPU Result Comparison
+- Used [Spectra version 1.0.1](https://spectralib.org) on the top of [Eigen3 version 3.4.0](https://eigen.tuxfamily.org/index.php?title=Main_Page)
+- Code ran on Intel(R) Core(TM) i9-10980XE CPU @ 3.00GHz with 125GB RAM and Arch GNU/Linux x86-64 with Linux kernel: 5.15.41-1-lts. Check yours using these commands: `lscpu` to get CPU details, `free -g -h -t` to get RAM details, and `cat /etc/os-release` OS details.
+
+###### Usage
+````
+make mainspectra
+./maxeigenvalue mtxs/dL22.mtx
+````
+
+-----
