@@ -4,8 +4,6 @@
 
 // C++ DEPENDENCIES
 #include <iostream>
-#include <fstream>
-#include <sstream>
 
 // EXTERNAL DEPENDENCIES: Eigen3, Spectra
 #include <Eigen/SparseCore>  // used to create sparse matrix
@@ -26,6 +24,10 @@
  * @param L The sparse square matrix
  * @param ncv
  * @return max_eigen_value
+ * @note Spectra (https://spectralib.org/doc/symeigsbase_8h_source) uses
+ * 	     Lanczos method (https://en.wikipedia.org/wiki/Lanczos_algorithm) to calculate
+ *       eigenvalue. The number of Lanczos vectors (ncv) is a parameter that can be
+ *       tuned to improve the performance of the algorithm. The default value is 20.
  */
 float calcMaxEigenvalue(const Eigen::SparseMatrix<float> &L, unsigned int ncv) {
 	// 1. Construct matrix operation object using the wrapper class SparseGenMatProd
@@ -41,12 +43,12 @@ float calcMaxEigenvalue(const Eigen::SparseMatrix<float> &L, unsigned int ncv) {
 	// 4. Retrieve results
 	float max_eigen_value;
 	if (eigs.info() == Spectra::CompInfo::Successful) {
-			max_eigen_value = eigs.eigenvalues().real()(0);
+		max_eigen_value = eigs.eigenvalues().real()(0);
 	}
 
 	if (max_eigen_value == 0) {
-			std::cout << FRD("[ERROR]: ") << "Max Eigenvalue shouldn't be zero unless it's zero matrix." << std::endl;
-			return EXIT_FAILURE;
+		std::cout << FRD("[ERROR]: ") << "Max Eigenvalue shouldn't be zero unless it's zero matrix." << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	return max_eigen_value;
@@ -80,8 +82,8 @@ int main(int argc, char** argv) {
 		std::cout << FGRN("[SUCCESS]: ") << "Max Eigenvalue: " << max_eigen_value << std::endl;
 
 	} else {
-			std::cout << FRD("[ERROR]: ") << "Please provide a path to a matrix market file." << std::endl;
-			return EXIT_FAILURE;
+		std::cout << FRD("[ERROR]: ") << "Please provide a path to a matrix market file." << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
