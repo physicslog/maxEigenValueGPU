@@ -205,9 +205,9 @@ float computeMaxEigenvalue(const CSThrust& M) {
   //!       just a initial guess, but it should be as close as possible to the actual max. eigenvalue.
   //!       Let me show you how I got this formula:
   //!       1. Probability of nnz elements on the (i, j) excluding diagonal (i.e. i != j) is (nnz - m)/(m^2 - m) = (nnz - m)/(m(m - 1)).
-  //!       2. Total possible nnz elements on the ith row excluding diagonal ii is (m - 1) * (nnz - m)/(m(m -1)) = (nnz - m)/m.
-  //!       3. Total possible  nnz elements on the ith column excluding diagonal ii is (m - 1) * (nnz - m)/(m(m -1)) = (nnz - m)/m.
-  //!       4. Total possible nnz elements either on the row or column excluding its diagonal element is 2*(nnz - m)/m.
+  //!       2. Total probable nnz elements on the ith row excluding diagonal ii is (m - 1) * (nnz - m)/(m(m -1)) = (nnz - m)/m.
+  //!       3. Total probable  nnz elements on the ith column excluding diagonal ii is (m - 1) * (nnz - m)/(m(m -1)) = (nnz - m)/m.
+  //!       4. Total probable nnz elements either on the row or column excluding its diagonal element is 2*(nnz - m)/m.
   float lambda_max_guess = *thrust::max_element(M.values.begin(), M.values.end()) + ((M.nnz - M.m)/M.m)*2;
 
   std::cout << "Initial guess for the largest eigenvalue: " << lambda_max_guess << std::endl;
