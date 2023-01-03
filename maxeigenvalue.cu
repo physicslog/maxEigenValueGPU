@@ -196,7 +196,7 @@ float computeMaxEigenvalue(const CSThrust& M) {
   int max_iter = 1000;  // maximum number of iterations
   //! @note To set the simple version of upper bound of the largest eigenvalue of the (graph-)Laplacian.
   //!       We use Gershgorin circle theorem such that
-  //!       |\lambda_max_computed| <= |lambda_max_guess| = d_i^max + R_i where,
+  //!       |lambda_max_guess| = d_i^max + R_i where,
   //!       d_i^max is largest degree of the vertex at ith vertex, and
   //!       R_i is the radius of the Gershgorin circle at ith vertex := \sum_{j \ne i} |M_ij|
   //!       For simplicity, we replace R_i by 2*(nnz - m)/m. lambda_max_guess doesn't needs to be perfect because it's
