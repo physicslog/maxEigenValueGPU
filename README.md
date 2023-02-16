@@ -1,5 +1,5 @@
 #### NVIDIA GPU Calculator to calculate largest eigenvalue of a huge matrix using shift-inverse method
-Author: Damodar Rajbhandari (2022-Jan-01)
+Author: Damodar Rajbhandari (2023-Jan-01 - Last Update: 2023-Feb-16)
 
 ##### Usage
 ````
