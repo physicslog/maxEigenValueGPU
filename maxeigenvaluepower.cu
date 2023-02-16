@@ -1,4 +1,4 @@
-// Damodar Rajbhandari (2023-Jan-06)
+// Damodar Rajbhandari (2023-Feb-16)
 // Code compilation: make mainpower
 // Usage: ./maxeigenvaluepower <path-to-matrix-market-file>
 
@@ -16,7 +16,6 @@
 #include <thrust/host_vector.h>
 #include <thrust/transform.h>
 #include <thrust/inner_product.h>
-#include <thrust/random.h>
 
 // To check if CUDA API calls are successful
 #define CHECK_CUDA(func)                                                       \
@@ -51,16 +50,6 @@
     }                                                                          \
 }
 
-// Generate random number in the range [0, 1)
-struct genRandomNumber {
-    __device__
-    float operator () (int idx) {
-        thrust::default_random_engine randGen;
-        thrust::uniform_real_distribution<float> uniDist;
-        randGen.discard(idx);
-        return uniDist(randGen);
-  }
-};
 
 struct CSThrust {
   int m;  // number of rows
