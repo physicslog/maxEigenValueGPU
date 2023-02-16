@@ -3,8 +3,16 @@ Author: Damodar Rajbhandari (2022-Jan-01)
 
 ##### Usage
 ````
+# Shifted-inverse power method using cuSolver
 make
 ./maxeigenvalue mtxs/L11.mtx
+
+# Power method using cuSparse and thrust
+make mainpower
+./maxeigenvaluepower mtxs/L11.mtx
+
+# Compile Shifted-inverse power method, power method, and Spectra library
+make all
 ````
 
 ##### Software Dependencies
@@ -25,7 +33,38 @@ make
 ###### Usage
 ````
 make mainspectra
-./maxeigenvalue mtxs/dL22.mtx
+./maxeigenvaluespectra mtxs/dL22.mtx
 ````
 
 -----
+
+#### Performance Comparison of GPU Power Method Vs Spectra Library
+- Please install [hyperfine](https://github.com/sharkdp/hyperfine). It is a command-line benchmarking tool.
+  - It can be installed via `conda` from the `conda-forge` channel:
+    ````
+    conda install -c conda-forge hyperfine
+    ````
+
+Here are the results:
+- Using power method on GPU
+  ````
+  hyperfine './maxeigenvaluepower mtxs/dL22.mtx'
+  ````
+  - Results:
+    ````
+    Benchmark 1: ./maxeigenvaluepower mtxs/dL22.mtx
+      Time (mean ± σ):     14.282 s ±  0.043 s    [User: 12.608 s, System: 1.569 s]
+      Range (min … max):   14.241 s … 14.373 s    10 runs
+    ````
+- Using Spectra library on CPU
+  ````
+  hyperfine './maxeigenvaluespectra mtxs/dL22.mtx'
+  ````
+  - Results:
+    ````
+    Benchmark 1: ./maxeigenvaluespectra mtxs/dL22.mtx
+      Time (mean ± σ):      2.485 s ±  0.012 s    [User: 2.478 s, System: 0.007 s]
+      Range (min … max):    2.466 s …  2.506 s    10 runs
+    ````
+
+----
