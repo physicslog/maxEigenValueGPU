@@ -17,6 +17,13 @@
 #include <thrust/transform.h>
 #include <thrust/inner_product.h>
 
+// Terminal output color (just for cosmetic purpose)
+#define RST  "\x1B[37m"  // Reset color to white
+#define KGRN  "\033[0;32m"   // Define green color
+#define RD "\x1B[31m"  // Define red color
+#define FGRN(x) KGRN x RST  // Define compiler function for green color
+#define FRD(x) RD x RST  // Define compiler function for red color
+
 // To check if CUDA API calls are successful
 #define CHECK_CUDA(func)                                                       \
 {                                                                              \
@@ -66,7 +73,7 @@ struct CSThrust {
 void readMTXFile2CSR(const std::string& filepath, CSThrust& csr) {
   std::ifstream mtxfile(filepath.c_str(), std::ios::in);
   if (!mtxfile.is_open()) {
-    std::cout << "Error opening file: " << filepath << std::endl;
+    std::cout << FRD("[ERROR]: ") << "Error opening file: " << filepath << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -83,7 +90,7 @@ void readMTXFile2CSR(const std::string& filepath, CSThrust& csr) {
   assert(substr[2] == "coordinate");
 
   if (substr[3].compare("complex") == 0) {
-    std::cout << "Only real and integer valued matrices are supported" << std::endl;
+    std::cout << FRD("[ERROR]: ") << "Only real and integer valued matrices are supported" << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -94,7 +101,7 @@ void readMTXFile2CSR(const std::string& filepath, CSThrust& csr) {
   } else if (substr[4] == "general") {
     is_symmetric = false;
   } else {
-    std::cout << "Only symmetric and general matrices are supported" << std::endl;
+    std::cout << FRD("[ERROR]: ") <<  "Only symmetric and general matrices are supported" << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -214,7 +221,8 @@ float computeMaxEigenvaluePowerMethod(CSThrust& M, int max_iter) {
     float norm = std::sqrt(thrust::inner_product(x_k.begin(), x_k.end(), x_k.begin(), 0.0f));
 
     // Normalize x_k and update x_i
-    thrust::transform(x_k.begin(), x_k.end(), x_i.begin(), x_i.begin(), thrust::placeholders::_1 / norm);
+    // thrust::transform(x_k.begin(), x_k.end(), x_i.begin(), x_i.begin(), thrust::placeholders::_1 / norm);
+    thrust::transform(x_k.begin(), x_k.end(), x_i.begin(), thrust::placeholders::_1 / norm);
   }
 
   // Compute the maximum eigenvalue
@@ -226,19 +234,92 @@ float computeMaxEigenvaluePowerMethod(CSThrust& M, int max_iter) {
   return max_eigenvalue;
 }
 
+
+float computeMaxEigenvaluePowerMethodOptimized(CSThrust& M, int max_iter) {
+  assert(M.format == "CSR");  // We only use CSR format
+  assert(M.m == M.n);
+
+  // Initialize x_i to [1 1 ... 1]^T
+  thrust::device_vector<float> x_i(M.m, 1.0f), x_k(M.m, 0.0f);
+
+  // CUSPARSE APIs
+  cusparseHandle_t handle = NULL;
+  cusparseSpMatDescr_t matM;
+  cusparseDnVecDescr_t xi, xk;
+  void *dBuffer = NULL;
+  size_t bufferSize = 0;
+  float alpha = 1.0f;
+  float beta = 0.0f;
+
+  CHECK_CUSPARSE( cusparseCreate(&handle) )
+
+  CHECK_CUSPARSE( cusparseCreateCsr(&matM, M.m, M.n, M.nnz,
+                                   thrust::raw_pointer_cast(M.pointers.data()),
+                                   thrust::raw_pointer_cast(M.indices.data()),
+                                   thrust::raw_pointer_cast(M.values.data()),
+                                   CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I,
+                                   CUSPARSE_INDEX_BASE_ZERO, CUDA_R_32F) )
+
+  CHECK_CUSPARSE( cusparseCreateDnVec(&xi, M.m, thrust::raw_pointer_cast(x_i.data()), CUDA_R_32F) )
+  CHECK_CUSPARSE( cusparseCreateDnVec(&xk, M.m, thrust::raw_pointer_cast(x_k.data()), CUDA_R_32F) )
+
+  CHECK_CUSPARSE( cusparseSpMV_bufferSize(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
+                                          &alpha, matM, xi, &beta, xk, CUDA_R_32F,
+                                          CUSPARSE_MV_ALG_DEFAULT, &bufferSize) )
+
+  CHECK_CUDA( cudaMalloc(&dBuffer, bufferSize) )
+
+  float max_eigenvalue(0.0f), max_eigenvalue_prev(0.0f);
+  float tol = 1e-6;  // tolerance for convergence
+  int itr = 0;
+  // Power iteration method
+  while (itr < max_iter) {
+    // Compute x_k = A * x_i; generates Krylov subspace
+    CHECK_CUSPARSE( cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
+                                 &alpha, matM, xi, &beta, xk, CUDA_R_32F,
+                                 CUSPARSE_MV_ALG_DEFAULT, dBuffer) )
+
+    // Compute the L2 norm of x_k
+    float norm = std::sqrt(thrust::inner_product(x_k.begin(), x_k.end(), x_k.begin(), 0.0f));
+
+    // Normalize x_k and update x_i
+    // thrust::transform(x_k.begin(), x_k.end(), x_i.begin(), x_i.begin(), thrust::placeholders::_1 / norm);
+    thrust::transform(x_k.begin(), x_k.end(), x_i.begin(), thrust::placeholders::_1 / norm);
+
+    // Compute the maximum eigenvalue
+    CHECK_CUSPARSE( cusparseSpMV(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
+                                &alpha, matM, xi, &beta, xk, CUDA_R_32F,
+                                CUSPARSE_MV_ALG_DEFAULT, dBuffer) )
+
+    max_eigenvalue = thrust::inner_product(x_i.begin(), x_i.end(), x_k.begin(), 0.0f);
+
+    if (std::abs(max_eigenvalue - max_eigenvalue_prev) < tol) {
+      std::cout << FGRN("[SUCCESS]: ") << "Converged at iterations: " << itr << std::endl;
+      return max_eigenvalue;
+    }
+
+    max_eigenvalue_prev = max_eigenvalue;
+    itr++;
+  }
+
+  std::cout << FRD("[NOTE]: ") << "Maximum number of iterations reached." << std::endl;  // no convergence
+  return max_eigenvalue;
+}
+
 int main(int argc, char** argv) {
   std::string mtx_filepath;
   if (argc > 1) {
     mtx_filepath = argv[1];
   } else {
-    std::cout << "Please provide a path to a matrix market file." << std::endl;
+    std::cout << FRD("[ERROR]: ") << "Please provide a path to a matrix market file." << std::endl;
     return EXIT_FAILURE;
   }
 
   CSThrust M;  // Create a sparse matrix instance
   readMTXFile2CSR(mtx_filepath, M);  // Read the matrix market file and convert it to csr
-  float lambda_max = computeMaxEigenvaluePowerMethod(M, 1000);  // Compute the largest eigenvalue
-  std::cout << "Max eigenvalue: " << lambda_max << std::endl;
+  // float lambda_max = computeMaxEigenvaluePowerMethod(M, 1000);  // Compute the largest eigenvalue
+  float lambda_max = computeMaxEigenvaluePowerMethodOptimized(M, 1000);  // Compute the largest eigenvalue
+  std::cout << FGRN("[SUCCESS]: ") << "Max eigenvalue: " << lambda_max << std::endl;
 
   return EXIT_SUCCESS;
 }

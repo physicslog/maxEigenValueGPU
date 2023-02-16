@@ -46,7 +46,7 @@ make mainspectra
     ````
 
 Here are the results:
-- Using power method on GPU
+- Using power method on GPU (unoptimized code, without using tolerance for convergence. See:  `computeMaxEigenvaluePowerMethod`)
   ````
   hyperfine './maxeigenvaluepower mtxs/dL22.mtx'
   ````
@@ -55,6 +55,16 @@ Here are the results:
     Benchmark 1: ./maxeigenvaluepower mtxs/dL22.mtx
       Time (mean ± σ):     14.282 s ±  0.043 s    [User: 12.608 s, System: 1.569 s]
       Range (min … max):   14.241 s … 14.373 s    10 runs
+    ````
+- Using power method on GPU (optimized code, using tolerance for convergence. See `computeMaxEigenvaluePowerMethodOptimized`)
+  ````
+  hyperfine './maxeigenvaluepower mtxs/dL22.mtx'
+  ````
+  - Results:
+    ````
+    Benchmark 1: ./maxeigenvaluepower mtxs/dL22.mtx
+      Time (mean ± σ):     13.782 s ±  0.038 s    [User: 12.112 s, System: 1.569 s]
+      Range (min … max):   13.726 s … 13.873 s    10 runs
     ````
 - Using Spectra library on CPU
   ````
