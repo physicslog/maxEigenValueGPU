@@ -221,7 +221,7 @@ float computeMaxEigenvaluePowerMethod(CSThrust& M, int max_iter) {
     float norm = std::sqrt(thrust::inner_product(x_k.begin(), x_k.end(), x_k.begin(), 0.0f));
 
     // Normalize x_k and update x_i
-    // thrust::transform(x_k.begin(), x_k.end(), x_i.begin(), x_i.begin(), thrust::placeholders::_1 / norm);
+    // thrust::transform(x_k.begin(), x_k.end(), x_i.begin(), x_i.begin(), thrust::placeholders::_1 / norm);  // redundant
     thrust::transform(x_k.begin(), x_k.end(), x_i.begin(), thrust::placeholders::_1 / norm);
   }
 
@@ -283,7 +283,6 @@ float computeMaxEigenvaluePowerMethodOptimized(CSThrust& M, int max_iter) {
     float norm = std::sqrt(thrust::inner_product(x_k.begin(), x_k.end(), x_k.begin(), 0.0f));
 
     // Normalize x_k and update x_i
-    // thrust::transform(x_k.begin(), x_k.end(), x_i.begin(), x_i.begin(), thrust::placeholders::_1 / norm);
     thrust::transform(x_k.begin(), x_k.end(), x_i.begin(), thrust::placeholders::_1 / norm);
 
     // Compute the maximum eigenvalue
