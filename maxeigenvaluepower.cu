@@ -229,6 +229,14 @@ float computeMaxEigenvaluePowerMethod(CSThrust& M, int max_iter) {
                                CUSPARSE_MV_ALG_DEFAULT, dBuffer) )
 
   max_eigenvalue = thrust::inner_product(x_i.begin(), x_i.end(), x_k.begin(), 0.0f);
+
+  // Destroy the handle and descriptors
+  CHECK_CUSPARSE( cusparseDestroySpMat(matM) )
+  CHECK_CUSPARSE( cusparseDestroyDnVec(xi) )
+  CHECK_CUSPARSE( cusparseDestroyDnVec(xk) )
+  CHECK_CUSPARSE( cusparseDestroy(handle) )
+  CHECK_CUDA( cudaFree(dBuffer) )
+
   return max_eigenvalue;
 }
 
@@ -298,6 +306,13 @@ float computeMaxEigenvaluePowerMethodOptimized(CSThrust& M, int max_iter) {
     max_eigenvalue_prev = max_eigenvalue;
     itr++;
   }
+
+  // Destroy the handle and descriptors
+  CHECK_CUSPARSE( cusparseDestroySpMat(matM) )
+  CHECK_CUSPARSE( cusparseDestroyDnVec(xi) )
+  CHECK_CUSPARSE( cusparseDestroyDnVec(xk) )
+  CHECK_CUSPARSE( cusparseDestroy(handle) )
+  CHECK_CUDA( cudaFree(dBuffer) )
 
   std::cout << FRD("[NOTE]: ") << "Maximum number of iterations reached." << std::endl;  // no convergence
   return max_eigenvalue;
