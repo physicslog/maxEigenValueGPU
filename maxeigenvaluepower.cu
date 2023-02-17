@@ -316,7 +316,7 @@ float computeMaxEigenvaluePowerMethodOptimized(CSThrust& M, int max_iter) {
     max_eigenvalue = thrust::inner_product(x_i.begin(), x_i.end(), x_k.begin(), 0.0f);
 
     if (std::abs(max_eigenvalue - max_eigenvalue_prev) < tol) {
-      std::cout << FGRN("[SUCCESS]: ") << "Converged at iterations: " << itr << std::endl;
+      std::cout << FGRN("[NOTE]: ") << "Converged at iterations: " << itr << std::endl;
       return max_eigenvalue;
     }
 
