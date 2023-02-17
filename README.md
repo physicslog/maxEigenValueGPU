@@ -78,3 +78,7 @@ Here are the results:
     ````
 
 ----
+
+#### Notes
+- `maxeigenvalue ` which is based on `cusolverSpScsreigvs` doesnot work for larger matrices. For example: `mtx/dL22.mtx`.
+- `maxeigenvaluepower` doesnot work for `mtx/dL00.mtx` if you use `computeMaxEigenvaluePowerMethod` but for others in `mtx/` directory; it works fine. This is because we set the initial vector `x_i` sets to 1.0 for all the elements. This is because our initial vector give rises to a orthogonal vector with eigenvector. Ideally choosing a random vector such that its norm is 1 and entries is mostly non-zero (because $Ax = 0$ if $x$ is $0$) allows the chance to decrease that our vector is orthogonal to the eigenvector. It is done in `computeMaxEigenvaluePowerMethodOptimized` function.

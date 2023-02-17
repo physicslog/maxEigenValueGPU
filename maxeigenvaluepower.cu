@@ -14,6 +14,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/transform.h>
 #include <thrust/inner_product.h>
+#include <thrust/random.h>
 
 // Terminal output color (just for cosmetic purpose)
 #define RST  "\x1B[37m"  // Reset color to white
@@ -55,6 +56,16 @@
     }                                                                          \
 }
 
+// Generate random number in the range [0, 1)
+struct genRandomNumber {
+    __device__
+    float operator () (int idx) {
+        thrust::default_random_engine randGen;
+        thrust::uniform_real_distribution<float> uniDist;
+        randGen.discard(idx);
+        return uniDist(randGen);
+  }
+};
 
 struct CSThrust {
   int m;  // number of rows
@@ -245,8 +256,14 @@ float computeMaxEigenvaluePowerMethodOptimized(CSThrust& M, int max_iter) {
   assert(M.format == "CSR");  // We only use CSR format
   assert(M.m == M.n);
 
-  // Initialize x_i to [1 1 ... 1]^T
-  thrust::device_vector<float> x_i(M.m, 1.0f), x_k(M.m, 0.0f);
+  // Initialize two vectors x_i and x_k
+  thrust::device_vector<float> x_i(M.m), x_k(M.m, 0.0f);
+
+  // Set x_i := the random vector
+  thrust::transform(thrust::make_counting_iterator(0),
+                    thrust::make_counting_iterator(M.m),
+                    x_i.begin(),
+                    genRandomNumber());
 
   // CUSPARSE APIs
   cusparseHandle_t handle = NULL;
@@ -330,7 +347,7 @@ int main(int argc, char** argv) {
   CSThrust M;  // Create a sparse matrix instance
   readMTXFile2CSR(mtx_filepath, M);  // Read the matrix market file and convert it to csr
   // float lambda_max = computeMaxEigenvaluePowerMethod(M, 1000);  // Compute the largest eigenvalue
-  float lambda_max = computeMaxEigenvaluePowerMethodOptimized(M, 1000);  // Compute the largest eigenvalue
+  float lambda_max = computeMaxEigenvaluePowerMethodOptimized(M, 1e3);  // Compute the largest eigenvalue
   std::cout << FGRN("[SUCCESS]: ") << "Max eigenvalue: " << lambda_max << std::endl;
 
   return EXIT_SUCCESS;
