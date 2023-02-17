@@ -10,10 +10,8 @@
 // CUDA TOOLKIT DEPENDENCIES
 #include <cuda_runtime_api.h>
 #include <cusparse.h>
-#include <cusolverSp.h>
 
 #include <thrust/device_vector.h>
-#include <thrust/host_vector.h>
 #include <thrust/transform.h>
 #include <thrust/inner_product.h>
 
